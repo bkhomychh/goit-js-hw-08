@@ -9,12 +9,12 @@ player.on('loaded', onPlayerLoaded);
 player.on('timeupdate', throttle(onPlayerTimeUpdate, 1000));
 
 function onPlayerLoaded() {
-  if (localStorage.getItem(STORAGE_KEY)) {
-    player
-      .setCurrentTime(localStorage.getItem(STORAGE_KEY))
-      .catch(function (error) {
-        console.log(error.name + ': ' + error.message);
-      });
+  const storageData = localStorage.getItem(STORAGE_KEY);
+
+  if (storageData) {
+    player.setCurrentTime(storageData).catch(function (error) {
+      console.log(error.name + ': ' + error.message);
+    });
   }
 
   player.off('loaded');

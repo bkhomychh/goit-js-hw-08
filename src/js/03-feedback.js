@@ -1,31 +1,37 @@
 import throttle from 'lodash.throttle';
 
 const STORAGE_KEY = 'feedback-form-state';
-const feedbackFormRef = document.querySelector('.feedback-form');
-const { email: emailRef, message: messageRef } = feedbackFormRef.elements;
 const storageData = loadData();
+const feedbackFormRef = document.querySelector('.feedback-form');
 
-if (storageData) {
-  emailRef.value = storageData.email;
-  messageRef.value = storageData.message;
-}
+let formData = storageData ? storageData : {};
+
+init();
 
 feedbackFormRef.addEventListener('input', throttle(onFeedbackFormInput, 500));
 feedbackFormRef.addEventListener('submit', onFeedbackFormSubmit);
 
-function onFeedbackFormInput() {
-  const formData = getFormData();
-
-  saveData(formData);
+function getFormElNames(formRef) {
+  const formElNames = Object.keys(formRef.elements);
+  return formElNames.filter(name => !(name >= 0));
 }
 
-function getFormData() {
-  const formData = {};
+function init() {
+  if (!storageData) {
+    return;
+  }
 
-  formData.email = emailRef.value;
-  formData.message = messageRef.value;
+  const formElNames = getFormElNames(feedbackFormRef);
+  formElNames.forEach(name => {
+    feedbackFormRef.elements[name].value = storageData[name]
+      ? storageData[name]
+      : '';
+  });
+}
 
-  return formData;
+function onFeedbackFormInput({ target }) {
+  formData[target.name] = target.value;
+  saveData(formData);
 }
 
 function loadData() {
@@ -33,7 +39,7 @@ function loadData() {
     const data = localStorage.getItem(STORAGE_KEY);
     return data === null ? undefined : JSON.parse(data);
   } catch (error) {
-    console.log(error.name + ': ' + error.message);
+    showError(error);
   }
 }
 
@@ -41,20 +47,19 @@ function saveData(data) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.log(error.name + ': ' + error.message);
+    showError(error);
   }
 }
 
 function onFeedbackFormSubmit(evt) {
   evt.preventDefault();
 
-  if (emailRef.value !== '' && messageRef.value !== '') {
-    const formData = getFormData();
+  console.log(formData);
+  formData = {};
+  localStorage.removeItem(STORAGE_KEY);
+  feedbackFormRef.reset();
+}
 
-    console.log(formData);
-    localStorage.removeItem(STORAGE_KEY);
-    feedbackFormRef.reset();
-  } else {
-    console.log('Fill in all fields of the form');
-  }
+function showError(error) {
+  console.log(error.name + ': ' + error.message);
 }
